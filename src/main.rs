@@ -376,18 +376,13 @@ fn menu_item(ui: &mut egui::Ui, text: &str) -> egui::Response {
         if is_focused {
             ui.painter().rect_filled(rect, 2.0, ui.style().visuals.widgets.hovered.bg_fill);
         }
-        let text_color = if is_focused {
-            egui::Color32::WHITE
-        } else {
-            ui.style().visuals.text_color()
-        };
 
         ui.painter().text(
             egui::pos2(rect.min.x + 8.0, rect.center().y + TEXT_Y_OFFSET),
             egui::Align2::LEFT_CENTER,
             text,
             font_id,
-            text_color,
+            egui::Color32::WHITE,
         );
     }
 
@@ -444,11 +439,6 @@ fn custom_menu_button<R>(
         } else {
             egui::Color32::TRANSPARENT
         };
-        let text_color = if is_focused {
-            egui::Color32::WHITE
-        } else {
-            ui.style().visuals.text_color()
-        };
 
         ui.painter().rect_filled(rect, 2.0, bg_color);
 
@@ -457,7 +447,7 @@ fn custom_menu_button<R>(
             egui::Align2::CENTER_CENTER,
             text,
             font_id,
-            text_color,
+            egui::Color32::WHITE,
         );
     }
 
