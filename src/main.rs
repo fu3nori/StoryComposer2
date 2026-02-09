@@ -623,6 +623,31 @@ fn custom_menu_button<R>(
 
 impl eframe::App for StoryComposerApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // IME入力中（Preeditあり）またはCommit時はEnterキーを消費して改行を抑制
+        // これにより、変換確定時にEnterキーを押しても改行されなくなる
+        let (has_preedit, has_commit) = ctx.input(|i| {
+            let mut preedit = false;
+            let mut commit = false;
+            for event in &i.events {
+                if let egui::Event::Ime(ime) = event {
+                    match ime {
+                        egui::ImeEvent::Preedit(text) => preedit = !text.is_empty(),
+                        egui::ImeEvent::Commit(_) => commit = true,
+                        _ => {}
+                    }
+                }
+            }
+            (preedit, commit)
+        });
+
+        if has_preedit || has_commit {
+            ctx.input_mut(|i| {
+                i.events.retain(|e| {
+                    !matches!(e, egui::Event::Key { key: egui::Key::Enter, .. })
+                });
+            });
+        }
+
         // Handle close request
         if ctx.input(|i| i.viewport().close_requested()) {
             if self.is_dirty {
@@ -828,6 +853,42 @@ impl eframe::App for StoryComposerApp {
                         if menu_item(ui, "置換...").clicked() {
                             self.show_replace_dialog = true;
                             self.show_search_dialog = false;
+                            ui.close_menu();
+                        }
+                    });
+
+                    ui.add_space(5.0);
+
+                    // Help button
+                    custom_menu_button(ui, "ヘルプ", |ui| {
+                        ui.set_min_width(200.0);
+                        if menu_item(ui, "ReadMEを開く").clicked() {
+                            if let Ok(exe_path) = std::env::current_exe() {
+                                if let Some(exe_dir) = exe_path.parent() {
+                                    let readme_path = exe_dir.join("ReadME.txt");
+                                    let _ = std::process::Command::new("cmd")
+                                        .args(["/c", "start", "", &readme_path.to_string_lossy()])
+                                        .spawn();
+                                }
+                            }
+                            ui.close_menu();
+                        }
+                    });
+
+                    ui.add_space(5.0);
+
+                    // License button
+                    custom_menu_button(ui, "ライセンス", |ui| {
+                        ui.set_min_width(200.0);
+                        if menu_item(ui, "LICENSEを開く").clicked() {
+                            if let Ok(exe_path) = std::env::current_exe() {
+                                if let Some(exe_dir) = exe_path.parent() {
+                                    let license_path = exe_dir.join("LICENSE");
+                                    let _ = std::process::Command::new("cmd")
+                                        .args(["/c", "start", "", &license_path.to_string_lossy()])
+                                        .spawn();
+                                }
+                            }
                             ui.close_menu();
                         }
                     });
